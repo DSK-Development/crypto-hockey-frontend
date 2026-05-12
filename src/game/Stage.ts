@@ -1,4 +1,4 @@
-import { Application, Graphics, Container, Text } from 'pixi.js'
+import { Application, Graphics, Container } from 'pixi.js'
 import { RINK_W, RINK_H } from './coords'
 
 export interface StageHandles {

@@ -8,8 +8,13 @@ export class EngineClient {
   private handlers: MessageHandler[] = []
   private closeHandlers: CloseHandler[] = []
   private nextSeq = 1
+  private url: string
+  private initData: string
 
-  constructor(private readonly url: string, private readonly initData: string) {}
+  constructor(url: string, initData: string) {
+    this.url = url
+    this.initData = initData
+  }
 
   connect(): void {
     const ws = new WebSocket(this.url)

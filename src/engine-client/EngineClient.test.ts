@@ -8,7 +8,8 @@ class MockSocket {
   onclose: (() => void) | null = null
   onerror: (() => void) | null = null
   sent: string[] = []
-  constructor(public url: string) { MockSocket.instances.push(this) }
+  url: string
+  constructor(url: string) { this.url = url; MockSocket.instances.push(this) }
   send(d: string) { this.sent.push(d) }
   close() { this.onclose?.() }
 }
@@ -18,7 +19,6 @@ describe('EngineClient', () => {
   beforeEach(() => {
     originalWS = globalThis.WebSocket
     MockSocket.instances = []
-    // @ts-expect-error replace
     globalThis.WebSocket = MockSocket as unknown as typeof WebSocket
   })
   afterEach(() => { globalThis.WebSocket = originalWS })

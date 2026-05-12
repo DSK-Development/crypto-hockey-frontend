@@ -1,0 +1,69 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import { App } from './App'
+import { useMatchStore } from '../store/match'
+
+const mockConnect = vi.fn()
+const mockClose = vi.fn()
+const mockOnMessage = vi.fn()
+const mockOnClose = vi.fn()
+
+vi.mock('../telegram/webApp', () => ({
+  readLaunchParams: vi.fn(() => ({ initData: 'mock', matchId: 'm1' })),
+  setupTelegramChrome: vi.fn(),
+  impact: vi.fn(),
+  showMainButton: vi.fn(),
+  closeWebApp: vi.fn(),
+}))
+
+vi.mock('../engine-client/EngineClient', () => ({
+  EngineClient: vi.fn().mockImplementation(() => ({
+    connect: mockConnect,
+    close: mockClose,
+    onMessage: mockOnMessage,
+    onClose: mockOnClose,
+    sendInput: vi.fn(),
+    ping: vi.fn(),
+  })),
+}))
+
+vi.mock('./MatchScreen', () => ({
+  MatchScreen: () => <div data-testid="match-screen" />,
+}))
+
+describe('App routing', () => {
+  beforeEach(() => {
+    useMatchStore.getState().reset()
+    vi.clearAllMocks()
+  })
+
+  it('shows BootScreen initially', () => {
+    render(<App />)
+    expect(screen.getByText(/connecting/i)).toBeInTheDocument()
+  })
+
+  it('connects to engine on mount with matchId', async () => {
+    render(<App />)
+    await waitFor(() => expect(mockConnect).toHaveBeenCalled())
+  })
+
+  it('shows MatchScreen once authed with client', async () => {
+    render(<App />)
+    // Wait for effect to run and client to be set
+    await waitFor(() => expect(mockConnect).toHaveBeenCalled())
+    // Simulate server sending AUTH_OK + LIVE phase
+    const handler = mockOnMessage.mock.calls[0]?.[0]
+    if (handler) {
+      handler({ type: 'AUTH_OK', authOk: { playerSlot: 'A', opponent: { username: 'bob', telegramId: 2 } } })
+      handler({ type: 'MATCH_STATE', matchState: { phase: 'LIVE' } })
+    }
+    await waitFor(() => expect(screen.getByTestId('match-screen')).toBeInTheDocument())
+  })
+
+  it('shows error BootScreen when no matchId', async () => {
+    const { readLaunchParams } = await import('../telegram/webApp')
+    vi.mocked(readLaunchParams).mockReturnValueOnce({ initData: '', matchId: null })
+    render(<App />)
+    await waitFor(() => expect(screen.getByText(/could not connect/i)).toBeInTheDocument())
+  })
+})

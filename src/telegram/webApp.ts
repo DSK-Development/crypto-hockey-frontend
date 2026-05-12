@@ -6,7 +6,7 @@ export interface LaunchParams {
 }
 
 export function readLaunchParams(): LaunchParams {
-  WebApp.ready()
+  try { WebApp.ready() } catch { /* not in Telegram */ }
   const initData = WebApp.initData ?? ''
   // Telegram passes start_param through initDataUnsafe; matchId via URL hash for our flow.
   const hash = new URLSearchParams(window.location.hash.slice(1))
@@ -15,20 +15,22 @@ export function readLaunchParams(): LaunchParams {
 }
 
 export function setupTelegramChrome(): void {
-  WebApp.expand()
-  WebApp.setHeaderColor('#0c0f17')
-  WebApp.setBackgroundColor('#0c0f17')
-  WebApp.MainButton.hide()
+  try { WebApp.expand() } catch { /* not in Telegram */ }
+  try { WebApp.setHeaderColor('#0c0f17') } catch { /* not in Telegram */ }
+  try { WebApp.setBackgroundColor('#0c0f17') } catch { /* not in Telegram */ }
+  try { WebApp.MainButton.hide() } catch { /* not in Telegram */ }
 }
 
 export function showMainButton(text: string, onClick: () => void): void {
-  WebApp.MainButton.setText(text)
-  WebApp.MainButton.onClick(onClick)
-  WebApp.MainButton.show()
+  try {
+    WebApp.MainButton.setText(text)
+    WebApp.MainButton.onClick(onClick)
+    WebApp.MainButton.show()
+  } catch { /* not in Telegram */ }
 }
 
 export function closeWebApp(): void {
-  WebApp.close()
+  try { WebApp.close() } catch { /* not in Telegram */ }
 }
 
 export function impact(style: 'light' | 'medium' | 'heavy' = 'light'): void {

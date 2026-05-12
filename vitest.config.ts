@@ -6,7 +6,24 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    coverage: { provider: 'v8', reporter: ['text', 'lcov'], thresholds: { lines: 80 } },
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      thresholds: { lines: 80 },
+      exclude: [
+        'src/game/Stage.ts',      // Pixi canvas — requires WebGL runtime
+        'src/telegram/webApp.ts', // Telegram SDK wrapper — requires Telegram WebView
+        'src/app/MatchScreen.tsx', // Pixi canvas initialised in effect — E2E tested
+        'src/main.tsx',           // Entry point
+        'playwright.config.ts',
+        'eslint.config.js',
+        'vite.config.ts',
+        'vitest.config.ts',
+        'tests/**',
+        'node_modules/**',
+      ],
+    },
     setupFiles: ['./src/test/setup.ts'],
   },
 })
