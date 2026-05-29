@@ -19,6 +19,17 @@ npm test           # unit
 npm run test:e2e   # Playwright
 ```
 
+## Docker (production)
+
+```bash
+docker build \
+  --build-arg VITE_ENGINE_WS_URL=wss://engine.example/ws \
+  -t crypto-hockey-frontend .
+docker run -p 80:80 crypto-hockey-frontend
+```
+
+For the full stack see `docker-compose.yml` at the repo root.
+
 ## Telegram
 
 This is a Mini App. In production the bot's WebApp button opens it with `?matchId=...` appended; we read that from `window.location.hash`.
