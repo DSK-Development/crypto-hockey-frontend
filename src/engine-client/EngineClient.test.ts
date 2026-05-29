@@ -47,4 +47,30 @@ describe('EngineClient', () => {
     }) } as MessageEvent)
     expect(onMsg).toHaveBeenCalledWith(expect.objectContaining({ type: 'AUTH_OK' }))
   })
+
+  it('reconnects after unexpected close (retryCount < maxRetries)', async () => {
+    vi.useFakeTimers()
+    const c = new EngineClient('wss://x/ws?matchId=m1', 'INIT')
+    c.connect()
+    const s0 = MockSocket.instances[0]!
+    s0.onopen?.()
+    // Simulate unexpected close (not via c.close())
+    s0.onclose?.()
+    // Advance past the 1s backoff delay
+    await vi.runAllTimersAsync()
+    expect(MockSocket.instances.length).toBeGreaterThanOrEqual(2)
+    vi.useRealTimers()
+  })
+
+  it('does NOT reconnect after explicit c.close()', () => {
+    const c = new EngineClient('wss://x/ws?matchId=m1', 'INIT')
+    const onClose = vi.fn()
+    c.onClose(onClose)
+    c.connect()
+    const s0 = MockSocket.instances[0]!
+    s0.onopen?.()
+    c.close()
+    expect(MockSocket.instances.length).toBe(1)
+    expect(onClose).toHaveBeenCalled()
+  })
 })
