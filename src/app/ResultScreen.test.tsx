@@ -11,9 +11,14 @@ vi.mock('../telegram/webApp', () => ({
 describe('ResultScreen', () => {
   beforeEach(() => useMatchStore.getState().reset())
 
-  function applyMatchEnd(opts: { winnerUserId: string | null; reason: 'score' | 'timeout' | 'forfeit' | 'no_join'; finalScore: { a: number; b: number } }) {
+  function applyMatchEnd(opts: {
+    winnerUserId: string | null
+    winnerSlot?: 'A' | 'B' | null
+    reason: 'score' | 'timeout' | 'forfeit' | 'no_join'
+    finalScore: { a: number; b: number }
+  }) {
     useMatchStore.getState().onServerMessage({ type: 'AUTH_OK', authOk: { playerSlot: 'A', opponent: { username: 'bob', telegramId: 2 } } })
-    useMatchStore.getState().onServerMessage({ type: 'MATCH_END', matchEnd: opts })
+    useMatchStore.getState().onServerMessage({ type: 'MATCH_END', matchEnd: { ...opts, winnerSlot: opts.winnerSlot ?? null } })
   }
 
   it('shows You won when slot A and a > b', () => {
@@ -44,5 +49,17 @@ describe('ResultScreen', () => {
     applyMatchEnd({ winnerUserId: 'u1', reason: 'timeout', finalScore: { a: 3, b: 2 } })
     render(<ResultScreen />)
     expect(screen.getByText(/timeout/i)).toBeInTheDocument()
+  })
+
+  it('shows You won when slot A wins by forfeit (opponent disconnected)', () => {
+    applyMatchEnd({ winnerUserId: 'u-server-id', winnerSlot: 'A', reason: 'forfeit', finalScore: { a: 2, b: 1 } })
+    render(<ResultScreen />)
+    expect(screen.getByText(/you won/i)).toBeInTheDocument()
+  })
+
+  it('shows You lost when slot A loses by forfeit (we disconnected)', () => {
+    applyMatchEnd({ winnerUserId: 'u-server-id', winnerSlot: 'B', reason: 'forfeit', finalScore: { a: 1, b: 2 } })
+    render(<ResultScreen />)
+    expect(screen.getByText(/you lost/i)).toBeInTheDocument()
   })
 })

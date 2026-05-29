@@ -22,7 +22,7 @@ export type ServerMessage =
       }
     }
   | { type: 'GOAL'; goal: { scorer: Slot; score: Score } }
-  | { type: 'MATCH_END'; matchEnd: { winnerUserId: string | null; reason: 'score' | 'timeout' | 'forfeit' | 'no_join'; finalScore: Score } }
+  | { type: 'MATCH_END'; matchEnd: { winnerUserId: string | null; winnerSlot?: Slot | null; reason: 'score' | 'timeout' | 'forfeit' | 'no_join'; finalScore: Score } }
   | { type: 'PONG'; pong: { tClient: number; tServer: number } }
 
 const SERVER_TYPES = new Set(['AUTH_OK', 'AUTH_FAIL', 'MATCH_STATE', 'SNAPSHOT', 'GOAL', 'MATCH_END', 'PONG'])

@@ -4,6 +4,7 @@ import type { Phase, Score, ServerMessage, Slot } from '../protocol/messages'
 interface Opponent { username: string; telegramId: number }
 interface EndedState {
   winnerUserId: string | null
+  winnerSlot?: Slot | null
   reason: 'score' | 'timeout' | 'forfeit' | 'no_join'
   finalScore: Score
 }

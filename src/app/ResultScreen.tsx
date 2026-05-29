@@ -5,14 +5,12 @@ import { closeWebApp, showMainButton } from '../telegram/webApp'
 export function ResultScreen() {
   const ended = useMatchStore((s) => s.ended)!
   const slot = useMatchStore((s) => s.slot)
-  const myUserId = slot === 'A' ? 'self-A' : slot === 'B' ? 'self-B' : null
 
-  // Engine sends the userId; we only know our slot. Treat win by comparing scores in the slot's favour.
   const youWon =
     ended.reason === 'score'
       ? (slot === 'A' ? ended.finalScore.a > ended.finalScore.b : ended.finalScore.b > ended.finalScore.a)
-      : ended.reason === 'forfeit'
-        ? ended.winnerUserId !== null // forfeit → other player wins, we lost unless we are winner
+      : ended.winnerSlot
+        ? ended.winnerSlot === slot
         : false
 
   useEffect(() => { showMainButton('Back to Telegram', closeWebApp) }, [])
@@ -30,7 +28,6 @@ export function ResultScreen() {
           {ended.finalScore.a} : {ended.finalScore.b}
         </p>
         <p style={{ color: 'var(--color-ink-muted)' }}>Reason: {ended.reason}</p>
-        {void myUserId /* keep var referenced */}
       </section>
     </main>
   )

@@ -22,7 +22,7 @@ wss.on('connection', (ws) => {
         score: { a: 0, b: 0 } } }))
       setTimeout(() => {
         ws.send(JSON.stringify({ type: 'GOAL', goal: { scorer: 'A', score: { a: 1, b: 0 } } }))
-        ws.send(JSON.stringify({ type: 'MATCH_END', matchEnd: { winnerUserId: 'u1', reason: 'score', finalScore: { a: 5, b: 3 } } }))
+        ws.send(JSON.stringify({ type: 'MATCH_END', matchEnd: { winnerUserId: 'u1', winnerSlot: 'A', reason: 'score', finalScore: { a: 5, b: 3 } } }))
       }, 800)
     }
   })
