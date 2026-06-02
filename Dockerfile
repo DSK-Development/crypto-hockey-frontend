@@ -7,7 +7,7 @@ ARG VITE_ENGINE_WS_URL
 RUN npm run build
 
 FROM node:20-alpine
-RUN npm install -g serve
-COPY --from=build /build/dist /app
-EXPOSE 3000
-CMD ["/bin/sh", "-c", "serve -s /app -l tcp://0.0.0.0:${PORT:-3000}"]
+WORKDIR /app
+COPY --from=build /build/dist ./dist
+COPY server.js .
+CMD ["node", "server.js"]
