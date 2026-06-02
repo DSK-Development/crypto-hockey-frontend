@@ -5,6 +5,15 @@ const path = require('path');
 const port = process.env.PORT || 3000;
 const distDir = path.join(__dirname, 'dist');
 
+console.log('PORT env:', process.env.PORT);
+console.log('Using port:', port);
+console.log('__dirname:', __dirname);
+console.log('distDir:', distDir);
+console.log('dist exists:', fs.existsSync(distDir));
+if (fs.existsSync(distDir)) {
+  console.log('dist contents:', fs.readdirSync(distDir).slice(0, 5));
+}
+
 const mimeTypes = {
   '.html': 'text/html',
   '.js': 'application/javascript',
