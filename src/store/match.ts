@@ -27,6 +27,7 @@ interface MatchState {
   durationLeftMs: number | null
   snapshots: Snapshot[] // ring buffer of last 2
   ended: EndedState | null
+  authFailReason: string | null
   setConnectionPhase: (p: MatchState['connectionPhase']) => void
   onServerMessage: (m: ServerMessage) => void
   reset: () => void
@@ -42,6 +43,7 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   durationLeftMs: null,
   snapshots: [],
   ended: null,
+  authFailReason: null,
   setConnectionPhase: (p) => set({ connectionPhase: p }),
   onServerMessage: (m) => {
     switch (m.type) {
@@ -49,7 +51,7 @@ export const useMatchStore = create<MatchState>((set, get) => ({
         set({ slot: m.authOk.playerSlot, opponent: m.authOk.opponent, connectionPhase: 'authed' })
         return
       case 'AUTH_FAIL':
-        set({ connectionPhase: 'error' })
+        set({ connectionPhase: 'error', authFailReason: m.authFail.reason })
         return
       case 'MATCH_STATE':
         set({
@@ -81,6 +83,6 @@ export const useMatchStore = create<MatchState>((set, get) => ({
   reset: () => set({
     connectionPhase: 'idle', phase: 'PENDING', slot: null, opponent: null,
     score: { a: 0, b: 0 }, countdownMs: null, durationLeftMs: null,
-    snapshots: [], ended: null,
+    snapshots: [], ended: null, authFailReason: null,
   }),
 }))

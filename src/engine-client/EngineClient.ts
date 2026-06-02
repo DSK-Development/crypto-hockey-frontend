@@ -14,6 +14,7 @@ export class EngineClient {
   private nextSeq = 1
   private retryCount = 0
   private closed = false
+  private noRetry = false
   private readonly url: string
   private readonly initData: string
 
@@ -24,6 +25,7 @@ export class EngineClient {
 
   connect(): void {
     this.closed = false
+    this.noRetry = false
     this._connect()
   }
 
@@ -36,10 +38,15 @@ export class EngineClient {
     }
     ws.onmessage = (e) => {
       const m = parseServerMessage(String(e.data))
-      if (m) this.handlers.forEach((h) => h(m))
+      if (m) {
+        if (m.type === 'AUTH_FAIL') {
+          this.noRetry = true
+        }
+        this.handlers.forEach((h) => h(m))
+      }
     }
     ws.onclose = () => {
-      if (this.closed) {
+      if (this.closed || this.noRetry) {
         this.closeHandlers.forEach((h) => h())
         return
       }

@@ -2,9 +2,17 @@ import { useMatchStore } from '../store/match'
 
 export function BootScreen() {
   const status = useMatchStore((s) => s.connectionPhase)
+  const authFailReason = useMatchStore((s) => s.authFailReason)
   const message =
-    status === 'error' ? 'Could not connect. Reopen from the bot.' :
-    status === 'closed' ? 'Connection closed.' : 'Connecting to match…'
+    status === 'error'
+      ? (authFailReason?.includes('not a participant')
+          ? 'You are not in this match. Use /testmatch again after signing in.'
+          : authFailReason?.includes('HMAC') || authFailReason?.includes('auth failed')
+            ? 'Auth failed. Ensure TELEGRAM_BOT_TOKEN on account-management matches BOT_TOKEN.'
+            : authFailReason
+              ? `Could not connect: ${authFailReason}`
+              : 'Could not connect. Reopen from the bot.')
+      : status === 'closed' ? 'Connection closed.' : 'Connecting to match…'
   return (
     <main style={{
       display: 'grid', placeItems: 'center', height: '100%',

@@ -14,26 +14,23 @@ export function App() {
   const phase = useMatchStore((s) => s.phase)
   const connectionPhase = useMatchStore((s) => s.connectionPhase)
   const ended = useMatchStore((s) => s.ended)
-  const onServerMessage = useMatchStore((s) => s.onServerMessage)
   const setConnectionPhase = useMatchStore((s) => s.setConnectionPhase)
+  const matchId = launch.matchId
+  const initData = launch.initData
 
   useEffect(() => {
     setupTelegramChrome()
-    // No matchId means the app was opened outside a match (welcome/menu button).
-    // Show the home screen instead of connecting to the engine.
-    if (!launch.matchId) return
+    if (!matchId) return
     const engineWs = getRuntimeConfig().engineWsUrl
-    const c = new EngineClient(`${engineWs}?matchId=${encodeURIComponent(launch.matchId)}`, launch.initData)
-    c.onMessage(onServerMessage)
+    const c = new EngineClient(`${engineWs}?matchId=${encodeURIComponent(matchId)}`, initData)
+    c.onMessage((m) => useMatchStore.getState().onServerMessage(m))
     c.onClose(() => setConnectionPhase('closed'))
     setConnectionPhase('connecting')
     c.connect()
-    // The EngineClient is an external (WebSocket) resource created once per
-    // match; storing the live instance is the point of this effect.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setClient(c)
     return () => c.close()
-  }, [launch, onServerMessage, setConnectionPhase])
+  }, [matchId, initData, setConnectionPhase])
 
   if (!launch.matchId) return <HomeScreen />
   if (ended) return <ResultScreen />

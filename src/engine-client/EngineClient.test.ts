@@ -62,6 +62,19 @@ describe('EngineClient', () => {
     vi.useRealTimers()
   })
 
+  it('does NOT reconnect after AUTH_FAIL', async () => {
+    vi.useFakeTimers()
+    const c = new EngineClient('wss://x/ws?matchId=m1', 'INIT')
+    c.connect()
+    const s0 = MockSocket.instances[0]!
+    s0.onopen?.()
+    s0.onmessage?.({ data: JSON.stringify({ type: 'AUTH_FAIL', authFail: { reason: 'bad' } }) } as MessageEvent)
+    s0.onclose?.()
+    await vi.runAllTimersAsync()
+    expect(MockSocket.instances.length).toBe(1)
+    vi.useRealTimers()
+  })
+
   it('does NOT reconnect after explicit c.close()', () => {
     const c = new EngineClient('wss://x/ws?matchId=m1', 'INIT')
     const onClose = vi.fn()
