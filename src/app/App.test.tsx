@@ -11,7 +11,8 @@ const mockOnClose = vi.fn()
 vi.mock('../telegram/webApp', () => ({
   readLaunchParams: vi.fn(() => ({ initData: 'mock', matchId: 'm1' })),
   setupTelegramChrome: vi.fn(),
-  signIn: vi.fn(() => true),
+  signIn: vi.fn(() => Promise.resolve(true)),
+  readInitData: vi.fn(() => 'mock'),
   impact: vi.fn(),
   showMainButton: vi.fn(),
   closeWebApp: vi.fn(),
@@ -62,18 +63,20 @@ describe('App routing', () => {
   })
 
   it('shows HomeScreen (not an error) when no matchId', async () => {
-    const { readLaunchParams } = await import('../telegram/webApp')
+    const { readLaunchParams, readInitData } = await import('../telegram/webApp')
     vi.mocked(readLaunchParams).mockReturnValueOnce({ initData: '', matchId: null })
+    vi.mocked(readInitData).mockReturnValue('')
     render(<App />)
-    await waitFor(() => expect(screen.getByText(/open this app from the crypto hockey bot/i)).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/open this app from the crypto hockey bot in telegram/i)).toBeInTheDocument())
     expect(screen.queryByText(/could not connect/i)).not.toBeInTheDocument()
     expect(mockConnect).not.toHaveBeenCalled()
   })
 
-  it('offers sign-in on HomeScreen when initData is present', async () => {
-    const { readLaunchParams } = await import('../telegram/webApp')
+  it('shows HomeScreen with sign-in flow when initData is present', async () => {
+    const { readLaunchParams, readInitData } = await import('../telegram/webApp')
     vi.mocked(readLaunchParams).mockReturnValueOnce({ initData: 'tg-init', matchId: null })
+    vi.mocked(readInitData).mockReturnValue('tg-init')
     render(<App />)
-    await waitFor(() => expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText(/signed in/i)).toBeInTheDocument())
   })
 })

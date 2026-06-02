@@ -35,7 +35,7 @@ export function App() {
     return () => c.close()
   }, [launch, onServerMessage, setConnectionPhase])
 
-  if (!launch.matchId) return <HomeScreen initData={launch.initData} />
+  if (!launch.matchId) return <HomeScreen />
   if (ended) return <ResultScreen />
   if (connectionPhase === 'authed' && phase !== 'PENDING' && client) return <MatchScreen client={client} />
   return <BootScreen />

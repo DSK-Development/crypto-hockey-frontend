@@ -10,7 +10,9 @@ npm install
 npm run dev
 ```
 
-Open the Vite URL with `#matchId=<id>` and the dev mock running (`npm run test:e2e` starts one), or against the real engine via `VITE_ENGINE_WS_URL=wss://engine.example/ws`.
+Open the Vite URL with `?matchId=<id>` and the dev mock running (`npm run test:e2e` starts one), or against the real engine via `VITE_ENGINE_WS_URL=wss://engine.example/ws`.
+
+Set `VITE_BOT_API_URL` to the bot's public HTTP base URL so the Home screen can sign users in via `POST /auth/session`.
 
 ## Tests
 
