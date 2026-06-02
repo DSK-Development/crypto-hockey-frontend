@@ -6,8 +6,7 @@ import { HomeScreen } from './HomeScreen'
 import { MatchScreen } from './MatchScreen'
 import { ResultScreen } from './ResultScreen'
 import { EngineClient } from '../engine-client/EngineClient'
-
-const ENGINE_WS = import.meta.env.VITE_ENGINE_WS_URL ?? 'ws://localhost:8081/ws'
+import { getRuntimeConfig } from '../runtimeConfig'
 
 export function App() {
   const launch = useMemo(() => readLaunchParams(), [])
@@ -23,7 +22,8 @@ export function App() {
     // No matchId means the app was opened outside a match (welcome/menu button).
     // Show the home screen instead of connecting to the engine.
     if (!launch.matchId) return
-    const c = new EngineClient(`${ENGINE_WS}?matchId=${encodeURIComponent(launch.matchId)}`, launch.initData)
+    const engineWs = getRuntimeConfig().engineWsUrl
+    const c = new EngineClient(`${engineWs}?matchId=${encodeURIComponent(launch.matchId)}`, launch.initData)
     c.onMessage(onServerMessage)
     c.onClose(() => setConnectionPhase('closed'))
     setConnectionPhase('connecting')

@@ -75,14 +75,20 @@ export function closeWebApp(): void {
   try { WebApp.close() } catch { /* not in Telegram */ }
 }
 
-const BOT_API = import.meta.env.VITE_BOT_API_URL ?? ''
+import { getRuntimeConfig } from '../runtimeConfig'
+
+function botApiBase(): string {
+  return getRuntimeConfig().botApiUrl.replace(/\/$/, '')
+}
 
 async function signInViaHttp(initData: string): Promise<SignInResult> {
-  if (!BOT_API) {
+  const base = botApiBase()
+  if (!base) {
     return { ok: false, reason: 'no_bot_api' }
   }
+  const url = `${base}/auth/session`
   try {
-    const res = await fetch(`${BOT_API.replace(/\/$/, '')}/auth/session`, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ initData }),
@@ -97,7 +103,8 @@ async function signInViaHttp(initData: string): Promise<SignInResult> {
     if (res.status === 503) return { ok: false, reason: 'session_store', detail }
     return { ok: false, reason: 'server', detail }
   } catch (err) {
-    return { ok: false, reason: 'network', detail: err instanceof Error ? err.message : undefined }
+    const msg = err instanceof Error ? err.message : 'unknown'
+    return { ok: false, reason: 'network', detail: `${msg} → ${url}` }
   }
 }
 
@@ -119,11 +126,11 @@ export async function signIn(): Promise<SignInResult> {
 export function signInErrorMessage(result: Extract<SignInResult, { ok: false }>): string {
   switch (result.reason) {
     case 'no_bot_api':
-      return 'Sign-in is not configured (missing VITE_BOT_API_URL on the frontend build).'
+      return 'Sign-in is not configured. On Railway set BOT_API_URL on the frontend service (e.g. https://your-bot.up.railway.app).'
     case 'network':
       return result.detail
         ? `Cannot reach the bot API: ${result.detail}`
-        : 'Cannot reach the bot API. Check VITE_BOT_API_URL (public https URL).'
+        : 'Cannot reach the bot API. Set BOT_API_URL to the bot public https URL (not WEBAPP_URL or ENGINE_WS).'
     case 'invalid_init_data':
       return result.detail?.includes('HMAC') || result.detail?.includes('mismatch')
         ? 'Telegram auth rejected (bot token mismatch). Set TELEGRAM_BOT_TOKEN on account-management to the same value as BOT_TOKEN on the bot.'

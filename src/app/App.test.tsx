@@ -8,6 +8,17 @@ const mockClose = vi.fn()
 const mockOnMessage = vi.fn()
 const mockOnClose = vi.fn()
 
+vi.mock('../runtimeConfig', () => ({
+  getRuntimeConfig: () => ({
+    botApiUrl: 'https://bot.example',
+    engineWsUrl: 'wss://engine.example/ws',
+  }),
+  loadRuntimeConfig: vi.fn(() => Promise.resolve({
+    botApiUrl: 'https://bot.example',
+    engineWsUrl: 'wss://engine.example/ws',
+  })),
+}))
+
 vi.mock('../telegram/webApp', () => ({
   readLaunchParams: vi.fn(() => ({ initData: 'mock', matchId: 'm1' })),
   setupTelegramChrome: vi.fn(),
