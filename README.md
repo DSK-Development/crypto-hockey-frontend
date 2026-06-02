@@ -32,7 +32,13 @@ For the full stack see `docker-compose.yml` at the repo root.
 
 ## Telegram
 
-This is a Mini App. In production the bot's WebApp button opens it with `?matchId=...` appended; we read that from `window.location.hash`.
+This is a Mini App. In production the bot opens it with `?matchId=...` appended to the
+**query string** (Telegram preserves the query but overwrites the URL hash with its own
+launch params), and we read `matchId` from `window.location.search`.
+
+When opened **without** a `matchId` (the bot's welcome/sign-in button), the app shows a
+`HomeScreen` instead of erroring. From a reply-keyboard `web_app` button it can sign the
+user in via `WebApp.sendData(initData)`, which the bot exchanges for an account session.
 
 ## WebSocket client
 

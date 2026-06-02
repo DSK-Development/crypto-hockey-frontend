@@ -37,6 +37,20 @@ export function closeWebApp(): void {
   try { WebApp.close() } catch { /* not in Telegram */ }
 }
 
+// Signs the user in by sending the raw initData back to the bot. The bot's
+// `web_app_data` handler exchanges it for an account session. This only
+// delivers when the Mini App was launched from a *reply-keyboard* web_app
+// button (Telegram does not emit web_app_data for inline/menu launches).
+export function signIn(): boolean {
+  try {
+    if (!WebApp.initData) return false
+    WebApp.sendData(WebApp.initData)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function impact(style: 'light' | 'medium' | 'heavy' = 'light'): void {
   try { WebApp.HapticFeedback.impactOccurred(style) } catch { /* not in Telegram */ }
 }
