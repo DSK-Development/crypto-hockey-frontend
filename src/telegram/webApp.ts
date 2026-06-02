@@ -8,9 +8,13 @@ export interface LaunchParams {
 export function readLaunchParams(): LaunchParams {
   try { WebApp.ready() } catch { /* not in Telegram */ }
   const initData = WebApp.initData ?? ''
-  // Telegram passes start_param through initDataUnsafe; matchId via URL hash for our flow.
+  // Telegram preserves the query string of the WebApp URL but appends its own
+  // launch params (tgWebAppData, ...) to the hash, where a custom fragment is
+  // unreliable. The bot therefore passes matchId as a query param; we still
+  // fall back to the hash so older links keep working.
+  const query = new URLSearchParams(window.location.search)
   const hash = new URLSearchParams(window.location.hash.slice(1))
-  const matchId = hash.get('matchId')
+  const matchId = query.get('matchId') ?? hash.get('matchId')
   return { initData, matchId }
 }
 
