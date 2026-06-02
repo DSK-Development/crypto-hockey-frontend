@@ -10,4 +10,4 @@ FROM node:20-alpine
 RUN npm install -g serve
 COPY --from=build /build/dist /app
 EXPOSE 3000
-CMD ["serve", "-s", "/app"]
+CMD ["/bin/sh", "-c", "serve -s /app -l tcp://0.0.0.0:${PORT:-3000}"]
