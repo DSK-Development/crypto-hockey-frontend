@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { readInitData, signIn } from '../telegram/webApp'
+import { readInitData, signIn, signInErrorMessage, type SignInResult } from '../telegram/webApp'
 
 // Shown when the Mini App is opened without a matchId (e.g. from the bot's
 // welcome button or the menu button). Instead of a dead-end error, we guide
@@ -9,28 +9,34 @@ export function HomeScreen() {
   const canSignIn = initData.length > 0
   const [signedIn, setSignedIn] = useState(false)
   const [signingIn, setSigningIn] = useState(false)
-  const [signInFailed, setSignInFailed] = useState(false)
+  const [signInError, setSignInError] = useState<string | null>(null)
+
+  const applyResult = (result: SignInResult) => {
+    if (result.ok) {
+      setSignedIn(true)
+      setSignInError(null)
+    } else {
+      setSignInError(signInErrorMessage(result))
+    }
+  }
 
   useEffect(() => {
     if (!canSignIn || signedIn) return
     let cancelled = false
     setSigningIn(true)
-    signIn().then((ok) => {
+    signIn().then((result) => {
       if (cancelled) return
       setSigningIn(false)
-      if (ok) setSignedIn(true)
-      else setSignInFailed(true)
+      applyResult(result)
     })
     return () => { cancelled = true }
   }, [canSignIn, signedIn])
 
   const onSignIn = async () => {
-    setSignInFailed(false)
+    setSignInError(null)
     setSigningIn(true)
-    const ok = await signIn()
+    applyResult(await signIn())
     setSigningIn(false)
-    if (ok) setSignedIn(true)
-    else setSignInFailed(true)
   }
 
   return (
@@ -62,9 +68,9 @@ export function HomeScreen() {
                 Sign in
               </button>
             )}
-            {signInFailed && (
-              <p style={{ color: 'var(--color-danger, #f87171)', marginTop: 'var(--space-3)' }}>
-                Sign-in failed. Check bot settings and try again.
+            {signInError && (
+              <p style={{ color: 'var(--color-danger, #f87171)', marginTop: 'var(--space-3)', fontSize: '0.9rem' }}>
+                {signInError}
               </p>
             )}
           </>

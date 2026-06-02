@@ -11,7 +11,8 @@ const mockOnClose = vi.fn()
 vi.mock('../telegram/webApp', () => ({
   readLaunchParams: vi.fn(() => ({ initData: 'mock', matchId: 'm1' })),
   setupTelegramChrome: vi.fn(),
-  signIn: vi.fn(() => Promise.resolve(true)),
+  signIn: vi.fn(() => Promise.resolve({ ok: true } as const)),
+  signInErrorMessage: vi.fn(() => ''),
   readInitData: vi.fn(() => 'mock'),
   impact: vi.fn(),
   showMainButton: vi.fn(),
