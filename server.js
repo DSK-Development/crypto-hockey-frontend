@@ -5,10 +5,22 @@ const path = require('path');
 const port = process.env.PORT || 3000;
 const distDir = path.join(__dirname, 'dist');
 
+function normalizeRuntimeUrl(value) {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim().replace(/\/$/, '');
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return '';
+  try {
+    const url = new URL(trimmed);
+    return ['http:', 'https:', 'ws:', 'wss:'].includes(url.protocol) ? trimmed : '';
+  } catch {
+    return '';
+  }
+}
+
 // Runtime env (Railway) — no Vite rebuild required. Falls back to VITE_* if set in image.
 const runtimeConfig = {
-  botApiUrl: (process.env.BOT_API_URL || process.env.VITE_BOT_API_URL || '').replace(/\/$/, ''),
-  engineWsUrl: (process.env.ENGINE_WS_URL || process.env.VITE_ENGINE_WS_URL || '').replace(/\/$/, ''),
+  botApiUrl: normalizeRuntimeUrl(process.env.BOT_API_URL || process.env.VITE_BOT_API_URL),
+  engineWsUrl: normalizeRuntimeUrl(process.env.ENGINE_WS_URL || process.env.VITE_ENGINE_WS_URL),
 };
 
 console.log('PORT env:', process.env.PORT);

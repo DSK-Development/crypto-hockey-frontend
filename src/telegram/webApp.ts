@@ -1,4 +1,5 @@
 import WebApp from '@twa-dev/sdk'
+import { getRuntimeConfig } from '../runtimeConfig'
 
 export interface LaunchParams {
   initData: string
@@ -17,27 +18,58 @@ export type SignInResult =
   | { ok: true }
   | { ok: false; reason: SignInFailureReason; detail?: string }
 
+type TelegramGlobal = {
+  Telegram?: {
+    WebApp?: {
+      initData?: string
+      ready?: () => void
+      expand?: () => void
+      setHeaderColor?: (color: string) => void
+      setBackgroundColor?: (color: string) => void
+      MainButton?: {
+        hide?: () => void
+        setText?: (text: string) => void
+        onClick?: (handler: () => void) => void
+        show?: () => void
+      }
+      close?: () => void
+      sendData?: (data: string) => void
+      HapticFeedback?: {
+        impactOccurred?: (style: 'light' | 'medium' | 'heavy') => void
+      }
+    }
+  }
+}
+
+function telegramWebApp() {
+  return (globalThis as TelegramGlobal).Telegram?.WebApp
+}
+
 /** Read Telegram initData from the SDK, falling back to launch hash/query. */
 export function readInitData(): string {
   try {
     if (WebApp.initData) return WebApp.initData
   } catch { /* not in Telegram */ }
 
+  const directInitData = telegramWebApp()?.initData
+  if (directInitData) return directInitData
+
   const hash = window.location.hash.slice(1)
-  const tgFromHash = extractTgWebAppData(hash)
+  const tgFromHash = extractLaunchValue(hash, 'tgWebAppData') ?? extractLaunchValue(hash, 'initData')
   if (tgFromHash) return tgFromHash
 
   const query = window.location.search.slice(1)
-  return extractTgWebAppData(query) ?? ''
+  return extractLaunchValue(query, 'tgWebAppData') ?? extractLaunchValue(query, 'initData') ?? ''
 }
 
-/** tgWebAppData is one URL-encoded query string; avoid URLSearchParams on full initData. */
-function extractTgWebAppData(queryOrHash: string): string | null {
+/** tgWebAppData/initData is one URL-encoded query string; avoid URLSearchParams on full initData. */
+function extractLaunchValue(queryOrHash: string, key: string): string | null {
   if (!queryOrHash) return null
   const parts = queryOrHash.split('&')
   for (const part of parts) {
-    if (!part.startsWith('tgWebAppData=')) continue
-    const raw = part.slice('tgWebAppData='.length)
+    const prefix = `${key}=`
+    if (!part.startsWith(prefix)) continue
+    const raw = part.slice(prefix.length)
     try {
       return decodeURIComponent(raw.replace(/\+/g, '%20'))
     } catch {
@@ -75,10 +107,15 @@ export function closeWebApp(): void {
   try { WebApp.close() } catch { /* not in Telegram */ }
 }
 
-import { getRuntimeConfig } from '../runtimeConfig'
-
 function botApiBase(): string {
-  return getRuntimeConfig().botApiUrl.replace(/\/$/, '')
+  const base = getRuntimeConfig().botApiUrl.replace(/\/$/, '')
+  if (!base || base === 'null' || base === 'undefined') return ''
+  try {
+    const url = new URL(base)
+    return url.protocol === 'http:' || url.protocol === 'https:' ? url.toString().replace(/\/$/, '') : ''
+  } catch {
+    return ''
+  }
 }
 
 async function signInViaHttp(initData: string): Promise<SignInResult> {

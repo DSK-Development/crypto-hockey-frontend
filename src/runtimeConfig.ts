@@ -3,9 +3,23 @@ export interface RuntimeConfig {
   engineWsUrl: string
 }
 
+function normalizeRuntimeUrl(value: unknown): string {
+  if (typeof value !== 'string') return ''
+  const trimmed = value.trim().replace(/\/$/, '')
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return ''
+  try {
+    const url = new URL(trimmed)
+    return url.protocol === 'http:' || url.protocol === 'https:' || url.protocol === 'ws:' || url.protocol === 'wss:'
+      ? trimmed
+      : ''
+  } catch {
+    return ''
+  }
+}
+
 const defaults: RuntimeConfig = {
-  botApiUrl: import.meta.env.VITE_BOT_API_URL ?? '',
-  engineWsUrl: import.meta.env.VITE_ENGINE_WS_URL ?? 'ws://localhost:8081/ws',
+  botApiUrl: normalizeRuntimeUrl(import.meta.env.VITE_BOT_API_URL),
+  engineWsUrl: normalizeRuntimeUrl(import.meta.env.VITE_ENGINE_WS_URL) || 'ws://localhost:8081/ws',
 }
 
 let config: RuntimeConfig = { ...defaults }
@@ -19,8 +33,8 @@ export async function loadRuntimeConfig(): Promise<RuntimeConfig> {
     if (res.ok) {
       const body = (await res.json()) as Partial<RuntimeConfig>
       config = {
-        botApiUrl: body.botApiUrl?.trim() || defaults.botApiUrl,
-        engineWsUrl: body.engineWsUrl?.trim() || defaults.engineWsUrl,
+        botApiUrl: normalizeRuntimeUrl(body.botApiUrl) || defaults.botApiUrl,
+        engineWsUrl: normalizeRuntimeUrl(body.engineWsUrl) || defaults.engineWsUrl,
       }
     }
   } catch {
