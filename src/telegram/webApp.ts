@@ -12,6 +12,7 @@ export type SignInFailureReason =
   | 'network'
   | 'invalid_init_data'
   | 'session_store'
+  | 'fallback_unconfirmed'
   | 'server'
 
 export type SignInResult =
@@ -151,13 +152,19 @@ export async function signIn(): Promise<SignInResult> {
   if (!initData) return { ok: false, reason: 'no_init_data' }
   const http = await signInViaHttp(initData)
   if (http.ok) return http
-  // Fallback: reply-keyboard only; does not confirm server-side success.
-  try {
-    WebApp.sendData(initData)
-    return { ok: true }
-  } catch {
-    return http
+
+  // Fallback is only useful when the bot HTTP endpoint cannot be reached.
+  // sendData does not confirm that the bot accepted and saved the session.
+  if (http.reason === 'no_bot_api' || http.reason === 'network') {
+    try {
+      WebApp.sendData(initData)
+      return { ok: false, reason: 'fallback_unconfirmed', detail: http.detail }
+    } catch {
+      return http
+    }
   }
+
+  return http
 }
 
 export function signInErrorMessage(result: Extract<SignInResult, { ok: false }>): string {
@@ -174,6 +181,8 @@ export function signInErrorMessage(result: Extract<SignInResult, { ok: false }>)
         : (result.detail ?? 'Telegram auth rejected. Check TELEGRAM_BOT_TOKEN matches BOT_TOKEN.')
     case 'session_store':
       return result.detail ?? 'Bot could not save session. Add REDIS_URL on the bot service in Railway.'
+    case 'fallback_unconfirmed':
+      return 'Sign-in was sent to Telegram, but this app could not confirm it. Wait for the bot confirmation in chat; if it does not appear, check BOT_API_URL on the frontend.'
     case 'server':
       return result.detail ?? 'Server error during sign-in.'
     case 'no_init_data':

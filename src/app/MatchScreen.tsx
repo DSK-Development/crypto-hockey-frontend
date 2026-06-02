@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { createStage, type StageHandles } from '../game/Stage'
 import { interpolate } from '../game/interpolation'
-import { cssToEngine, engineToCss } from '../game/coords'
+import { cssToEngine } from '../game/coords'
 import { useMatchStore } from '../store/match'
 import { EngineClient } from '../engine-client/EngineClient'
 import { impact } from '../telegram/webApp'
@@ -97,5 +97,3 @@ export function MatchScreen({ client }: Props) {
 function dist(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.hypot(a.x - b.x, a.y - b.y)
 }
-// keep engineToCss referenced for future overlays
-export const _unused = engineToCss

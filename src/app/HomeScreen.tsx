@@ -8,7 +8,7 @@ export function HomeScreen() {
   const initData = readInitData()
   const canSignIn = initData.length > 0
   const [signedIn, setSignedIn] = useState(false)
-  const [signingIn, setSigningIn] = useState(false)
+  const [signingIn, setSigningIn] = useState(canSignIn)
   const [signInError, setSignInError] = useState<string | null>(null)
 
   const applyResult = (result: SignInResult) => {
@@ -23,7 +23,6 @@ export function HomeScreen() {
   useEffect(() => {
     if (!canSignIn || signedIn) return
     let cancelled = false
-    setSigningIn(true)
     signIn().then((result) => {
       if (cancelled) return
       setSigningIn(false)
